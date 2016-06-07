@@ -1,0 +1,48 @@
+#!/bin/bash 
+
+##############################################################################
+#Copyright Wise2c Inc.
+# This program isn't  free software: but you can redistribute it and/or modify
+# it when you deploy Wise2c docker cloud product .
+###########################################################################
+#
+<<!EOF!
+function illustration{
+        脚本目的为创建安装Docker的本地YUM源
+
+}
+!EOF!
+
+#######################脚本环境声明#####################################################
+
+set –x    #任何参数都会显示
+set -e    # 执行结果不是true则应该退出。
+#set -o verbose #打印读入shell的输入行。
+set -o xtrace  #执行命令之前打印命令
+temp_dir=`mktemp`; rm -rf $temp_dir; mkdir -p $temp_dir    # 创建随机名称的临时目录
+temp_file=`mktemp`                                                                                 # 创建随机名称的临时文件
+TOPDIR=$(cd $(dirname "$0") && pwd)                        # 设定相对目录为当前文件夹上级目录 
+
+####################################正式脚本 ###############################################
+yes | yum install -y wget
+#Download the docker repository to a local directory. 
+wget -r --no-parent https://yum.dockerproject.org/repo/main/centos/7/ -P /var/docker
+
+#make repo file on local vm
+
+function _docker_repofile(){
+dockerfile=/etc/yum.repos.d/dockers2.repo
+cat <<"EOF">$dockerfile
+[docker]
+name=docker
+baseurl=file:///var/docker/yum.dockerproject.org/repo/main/centos/7/
+gpgcheck=0
+enabled=1
+EOF
+}
+
+_docker_repofile
+
+#Run yum update
+yum clean all
+yum update
